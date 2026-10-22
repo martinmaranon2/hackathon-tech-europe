@@ -64,3 +64,9 @@ Follow [AGENTS.md](AGENTS.md) and the repository's Entire guide for contribution
 This personal fork preserves the shared source and its contributor history: [ixsanpe/hackathon-tech-europe](https://github.com/ixsanpe/hackathon-tech-europe).
 
 The separate CrisisOS data-integration implementation is preserved on the `swiss-disaster-data-integrations-12-sources` branch. See its branch README for setup and provider integration details.
+
+## Project history and final integrated application
+
+Martin clarified that the Tech Europe hackathon repositories were individual workstreams that one teammate later combined into the final public project: [Resilix](https://github.com/20261010-hack-CH-ZH-ZRH-AgenticAI/resilix-web).
+
+This README describes the preserved workstream in this branch. Its scope and verification limits apply to this version, not to the final integrated Resilix application. Use the final repository for the combined project's setup and product documentation.
