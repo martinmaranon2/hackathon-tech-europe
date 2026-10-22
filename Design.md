@@ -1,5 +1,7 @@
 # CrisisOS Switzerland — Architecture & Feature Design Document
 
+> Implementation status (2026-10-22): this branch implements the data clients and tool interface. Gemini reasoning, Gradium voice, deployed interfaces, and real dispatch remain broader integration plans. Historical provider-health claims below were not revalidated by the documentation audit.
+
 This document records the system architecture, component breakdown, module responsibilities, and implemented features for **CrisisOS Switzerland**.
 
 ---
@@ -54,39 +56,40 @@ flowchart TD
 
 ## 2. Centralized Configuration & Standards
 
-All system constants, endpoint URLs, bounding coordinates, model names, and logging parameters reside centrally in [`crisis_data/config.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/config.py):
+All system constants, endpoint URLs, bounding coordinates, model names, and logging parameters reside centrally in [`crisis_data/config.py`](crisis_data/config.py):
+
 - **Model identifiers**: e.g., `gemini-2.5-flash`, `gemini-2.5-pro`.
 - **Zurich bounding box & default stations**: Sihl (2176), Limmat (2099), SMA Fluntern.
 - **Timeouts & Caching TTL**: 15s default HTTP timeout, 15-minute TTL for OSM queries.
 - **Authentication**: Ingested strictly via `.env` / environment variables (`WINDY_API_KEY`, `GEMINI_API_KEY`).
 
-Every function execution is logged at `INFO` level using `@log_function_call` in [`crisis_data/logger.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/logger.py), sanitizing large binary payloads (such as base64 images) to keep audit logs clean and secure.
+Every function execution is logged at `INFO` level using `@log_function_call` in [`crisis_data/logger.py`](crisis_data/logger.py), sanitizing large binary payloads (such as base64 images) to keep audit logs clean and secure.
 
 ---
 
 ## 3. Implemented Modules & Feature Breakdown
 
-| Feature | Source File | Description & Use Cases |
-| :--- | :--- | :--- |
-| **System Guidelines** | [`AGENTS.md`](file:///Users/martinmaranon2/hackathon-tech-europe/AGENTS.md) | Coding and documenting guidelines, modularity requirements, and logging rules. |
-| **Central Configuration** | [`crisis_data/config.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/config.py) | Centralized storage for model names, endpoints, Zurich coordinates, and timeouts. |
-| **Audit & Logging** | [`crisis_data/logger.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/logger.py) | Function call logger (`@log_function_call`) and GenAI call logger with payload sanitization. |
-| **Normalized Data Schemas** | [`crisis_data/models.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/models.py) | Pydantic / dataclass schemas (`NormalizedObservation`, `CameraMetadata`, `InfrastructureItem`, `DataSourceHealth`). |
-| **Weather Forecasts** | [`crisis_data/open_meteo.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/open_meteo.py) | Priority 1: Current weather, precipitation, 24h rain totals, and hourly outlooks from Open-Meteo. |
-| **Hydrological Monitoring** | [`crisis_data/bafu_hydro.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/bafu_hydro.py) | Priority 2: Real-time river water levels ($W$), discharge rate ($Q$), and temperatures from BAFU GraphQL. |
-| **Visual Webcam Intelligence** | [`crisis_data/windy_webcams.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/windy_webcams.py) | Priority 3: Camera discovery near Zurich bridges/rivers and multimodal image download for Gemini visual verification. |
-| **Geospatial & Elevation** | [`crisis_data/swisstopo.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/swisstopo.py) | Priority 4: Ground elevation from swisstopo Height API, WGS84 $\leftrightarrow$ LV95 coordinate conversions, Geoportal links. |
-| **Ground Station Observations** | [`crisis_data/meteoswiss_smn.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/meteoswiss_smn.py) | Priority 5: High-precision 10-minute automated ground weather observations from SwissMetNet (`sma`, `reh`, `klo`). |
-| **Precipitation Radar** | [`crisis_data/meteoswiss_radar.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/meteoswiss_radar.py) | Priority 6: STAC discovery for national 5-minute radar composites across Switzerland. |
-| **Critical Infrastructure** | [`crisis_data/osm_infrastructure.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/osm_infrastructure.py) | Priority 7: Identification of nearby hospitals, fire stations, and vulnerable bridges from OpenStreetMap Overpass. |
-| **ASTRA Road Traffic** | [`crisis_data/astra_traffic.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/astra_traffic.py) | Priority 8: Real-time road closures, incidents, and congestion on Swiss motorways (A1, A3) via opentransportdata.swiss DATEX II. |
-| **Swiss Flood Hazard Maps** | [`crisis_data/flood_hazard.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/flood_hazard.py) | Priority 9: Official BAFU Aquaprotect 100-year flood zone spatial evaluation via geo.admin.ch WMS GetFeatureInfo in EPSG:2056. |
-| **Official Hazard Warnings** | [`crisis_data/hazard_warnings.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/hazard_warnings.py) | Priority 10: Official Swiss federal natural hazard warnings (levels 1-5) from natural-hazards.ch / MeteoSwiss alerting feed. |
-| **ETH Seismological Service** | [`crisis_data/sed_earthquakes.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/sed_earthquakes.py) | Priority 11: Real-time Swiss earthquake monitoring catalog (magnitude, depth, epicenter) via ETH SED FDSN Web Service. |
-| **Swiss Population & Buildings** | [`crisis_data/bfs_population.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/bfs_population.py) | Priority 12: Building stock (BFS GWR) and demographic exposure metrics (STATPOP) via geo.admin.ch MapServer find service. |
-| **Data Health Monitor** | [`crisis_data/health.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/health.py) | Dynamic diagnostics across all 12 external data sources, producing automated Markdown health reports. |
-| **Gemini Tool Interface** | [`crisis_data/agent_tools.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/agent_tools.py) | Standalone callable functions with standard typed signatures ready for Gemini Tool declarations. |
-| **Integration Test Suite** | [`test_integrations.py`](file:///Users/martinmaranon2/hackathon-tech-europe/test_integrations.py) | End-to-end smoke test runner verifying connectivity, real data retrieval, and data freshness across all 12 sources. |
+| Feature                          | Source File                                                              | Description & Use Cases                                                                                                          |
+| :------------------------------- | :----------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------- |
+| **System Guidelines**            | [`AGENTS.md`](AGENTS.md)                                                 | Coding and documenting guidelines, modularity requirements, and logging rules.                                                   |
+| **Central Configuration**        | [`crisis_data/config.py`](crisis_data/config.py)                         | Centralized storage for model names, endpoints, Zurich coordinates, and timeouts.                                                |
+| **Audit & Logging**              | [`crisis_data/logger.py`](crisis_data/logger.py)                         | Function call logger (`@log_function_call`) and GenAI call logger with payload sanitization.                                     |
+| **Normalized Data Schemas**      | [`crisis_data/models.py`](crisis_data/models.py)                         | Pydantic / dataclass schemas (`NormalizedObservation`, `CameraMetadata`, `InfrastructureItem`, `DataSourceHealth`).              |
+| **Weather Forecasts**            | [`crisis_data/open_meteo.py`](crisis_data/open_meteo.py)                 | Priority 1: Current weather, precipitation, 24h rain totals, and hourly outlooks from Open-Meteo.                                |
+| **Hydrological Monitoring**      | [`crisis_data/bafu_hydro.py`](crisis_data/bafu_hydro.py)                 | Priority 2: Real-time river water levels ($W$), discharge rate ($Q$), and temperatures from BAFU GraphQL.                        |
+| **Visual Webcam Intelligence**   | [`crisis_data/windy_webcams.py`](crisis_data/windy_webcams.py)           | Priority 3: Camera discovery near Zurich bridges/rivers and multimodal image download for Gemini visual verification.            |
+| **Geospatial & Elevation**       | [`crisis_data/swisstopo.py`](crisis_data/swisstopo.py)                   | Priority 4: Ground elevation from swisstopo Height API, WGS84 $\leftrightarrow$ LV95 coordinate conversions, Geoportal links.    |
+| **Ground Station Observations**  | [`crisis_data/meteoswiss_smn.py`](crisis_data/meteoswiss_smn.py)         | Priority 5: High-precision 10-minute automated ground weather observations from SwissMetNet (`sma`, `reh`, `klo`).               |
+| **Precipitation Radar**          | [`crisis_data/meteoswiss_radar.py`](crisis_data/meteoswiss_radar.py)     | Priority 6: STAC discovery for national 5-minute radar composites across Switzerland.                                            |
+| **Critical Infrastructure**      | [`crisis_data/osm_infrastructure.py`](crisis_data/osm_infrastructure.py) | Priority 7: Identification of nearby hospitals, fire stations, and vulnerable bridges from OpenStreetMap Overpass.               |
+| **ASTRA Road Traffic**           | [`crisis_data/astra_traffic.py`](crisis_data/astra_traffic.py)           | Priority 8: Real-time road closures, incidents, and congestion on Swiss motorways (A1, A3) via opentransportdata.swiss DATEX II. |
+| **Swiss Flood Hazard Maps**      | [`crisis_data/flood_hazard.py`](crisis_data/flood_hazard.py)             | Priority 9: Official BAFU Aquaprotect 100-year flood zone spatial evaluation via geo.admin.ch WMS GetFeatureInfo in EPSG:2056.   |
+| **Official Hazard Warnings**     | [`crisis_data/hazard_warnings.py`](crisis_data/hazard_warnings.py)       | Priority 10: Official Swiss federal natural hazard warnings (levels 1-5) from natural-hazards.ch / MeteoSwiss alerting feed.     |
+| **ETH Seismological Service**    | [`crisis_data/sed_earthquakes.py`](crisis_data/sed_earthquakes.py)       | Priority 11: Real-time Swiss earthquake monitoring catalog (magnitude, depth, epicenter) via ETH SED FDSN Web Service.           |
+| **Swiss Population & Buildings** | [`crisis_data/bfs_population.py`](crisis_data/bfs_population.py)         | Priority 12: Building stock (BFS GWR) and demographic exposure metrics (STATPOP) via geo.admin.ch MapServer find service.        |
+| **Data Health Monitor**          | [`crisis_data/health.py`](crisis_data/health.py)                         | Dynamic diagnostics across all 12 external data sources, producing automated Markdown health reports.                            |
+| **Gemini Tool Interface**        | [`crisis_data/agent_tools.py`](crisis_data/agent_tools.py)               | Standalone callable functions with standard typed signatures ready for Gemini Tool declarations.                                 |
+| **Integration Test Suite**       | [`test_integrations.py`](test_integrations.py)                           | End-to-end smoke test runner verifying connectivity, real data retrieval, and data freshness across all 12 sources.              |
 
 ---
 
@@ -160,7 +163,7 @@ In disaster intelligence and life-critical emergency coordination, transient net
 ## 6. Next Planned Milestones
 
 1. **Gemini Agent Multimodal Orchestration**:
-   - Implement Gemini 2.5 Flash / Pro system prompt incorporating tools from [`crisis_data.agent_tools`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/agent_tools.py).
+   - Implement Gemini 2.5 Flash / Pro system prompt incorporating tools from [`crisis_data.agent_tools`](crisis_data/agent_tools.py).
    - Multimodal prompt flow: Compare river discharge threshold warnings with latest webcam imagery.
 2. **Gradium Voice Interface**:
    - Bind audio input/output stream to the agent decision loop for hands-free commander queries.

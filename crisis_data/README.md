@@ -29,6 +29,7 @@ This directory houses the complete data integration subsystem for **CrisisOS**, 
 ## 1. Architecture & Design Overview
 
 Each integration follows a uniform, production-ready pattern:
+
 - **Centralized Configuration**: All URLs, coordinate defaults, timeouts, and model parameters reside in `crisis_data/config.py`.
 - **Function Call Auditing**: Every entry point is decorated with `@log_function_call` (`crisis_data/logger.py`) to log arguments, execution duration, and outcomes, stripping large binary payloads.
 - **Strict Data Modeling**: Returned payloads conform to standardized typed dataclasses in `crisis_data/models.py`.
@@ -39,6 +40,7 @@ Each integration follows a uniform, production-ready pattern:
 ## 2. Data Source Catalog (All 12 Integrations)
 
 ### 1. Open-Meteo Weather API
+
 - **Purpose**: Provides real-time weather observations, precipitation accumulation, and short-term meteorological forecasts.
 - **API Endpoint**: `https://api.open-meteo.com/v1/forecast`
 - **Documentation**: [https://open-meteo.com/en/docs](https://open-meteo.com/en/docs)
@@ -55,6 +57,7 @@ Each integration follows a uniform, production-ready pattern:
 ---
 
 ### 2. BAFU / FOEN Swiss Hydrology
+
 - **Purpose**: Real-time river water levels, discharge volumes, and water temperatures across Swiss river systems, focused on the Sihl and Limmat in Zurich.
 - **API Endpoint**: `https://data.bafu.admin.ch/api` (GraphQL)
 - **Documentation**: [https://data.bafu.admin.ch/en/](https://data.bafu.admin.ch/en/)
@@ -72,6 +75,7 @@ Each integration follows a uniform, production-ready pattern:
 ---
 
 ### 3. Windy Webcams API V3
+
 - **Purpose**: Multimodal visual intelligence to detect river overflowing, bridge inundation, and street conditions via public webcams.
 - **API Endpoint**: `https://api.windy.com/webcams/api/v3/webcams`
 - **Documentation**: [https://api.windy.com/webcams/docs](https://api.windy.com/webcams/docs)
@@ -89,6 +93,7 @@ Each integration follows a uniform, production-ready pattern:
 ---
 
 ### 4. swisstopo / Swiss Federal Geodata
+
 - **Purpose**: Precise digital elevation model (DEM) querying, LV95 (EPSG:2056) $\leftrightarrow$ WGS84 (EPSG:4326) coordinate transformations, and official Geoportal map links.
 - **API Endpoint**: `https://api3.geo.admin.ch/rest/services/height`
 - **Documentation**: [https://docs.geo.admin.ch/](https://docs.geo.admin.ch/)
@@ -105,6 +110,7 @@ Each integration follows a uniform, production-ready pattern:
 ---
 
 ### 5. MeteoSwiss SwissMetNet Stations
+
 - **Purpose**: High-precision 10-minute ground meteorological measurements from federal automated weather stations (`sma` Zurich/Fluntern, `reh` Affoltern, `klo` Kloten).
 - **API Endpoint**: `https://data.geo.admin.ch/ch.meteoschweiz.ogd-smn/`
 - **Documentation**: [https://opendatadocs.meteoswiss.ch/](https://opendatadocs.meteoswiss.ch/)
@@ -122,6 +128,7 @@ Each integration follows a uniform, production-ready pattern:
 ---
 
 ### 6. MeteoSwiss Precipitation Radar
+
 - **Purpose**: National precipitation radar composite discovery via SpatioTemporal Asset Catalog (STAC).
 - **API Endpoint**: `https://data.geo.admin.ch/api/stac/v1/collections/ch.meteoschweiz.radar-precipitation`
 - **Documentation**: [https://opendatadocs.meteoswiss.ch/](https://opendatadocs.meteoswiss.ch/)
@@ -138,6 +145,7 @@ Each integration follows a uniform, production-ready pattern:
 ---
 
 ### 7. OpenStreetMap Overpass (Infrastructure)
+
 - **Purpose**: Identification of emergency infrastructure within flood impact zones (hospitals, fire stations, bridges, emergency access points).
 - **API Endpoint**: `https://overpass-api.de/api/interpreter` (with automatic fallback to `kumi.systems` and `private.coffee` mirrors).
 - **Documentation**: [https://wiki.openstreetmap.org/wiki/Overpass_API](https://wiki.openstreetmap.org/wiki/Overpass_API)
@@ -154,6 +162,7 @@ Each integration follows a uniform, production-ready pattern:
 ---
 
 ### 8. ASTRA Road Traffic (opentransportdata.swiss)
+
 - **Purpose**: Real-time traffic disruptions, closures, and congestion warnings across Swiss national motorways (A1, A3, A4) affecting evacuation and dispatch routes.
 - **API Endpoint**: `https://api.opentransportdata.swiss/TDP/Traffic_Data/DATEXII/situation`
 - **Documentation**: [https://opentransportdata.swiss/en/road-traffic/](https://opentransportdata.swiss/en/road-traffic/)
@@ -170,6 +179,7 @@ Each integration follows a uniform, production-ready pattern:
 ---
 
 ### 9. Swiss Flood Hazard Maps (BAFU Aquaprotect)
+
 - **Purpose**: Evaluates whether specific coordinates or infrastructure facilities fall directly inside official federal flood hazard inundation zones (return periods of 50, 100, 250, or 500 years).
 - **API Endpoint**: `https://wms.geo.admin.ch/` (WMS 1.3.0 `GetFeatureInfo` on `ch.bafu.aquaprotect_100`)
 - **Documentation**: [https://docs.geo.admin.ch/](https://docs.geo.admin.ch/)
@@ -186,6 +196,7 @@ Each integration follows a uniform, production-ready pattern:
 ---
 
 ### 10. Official Swiss Hazard Warnings (natural-hazards.ch)
+
 - **Purpose**: Ingestion of the official federal natural hazard alerting feed (Common Alerting Protocol / MeteoSwiss backend) covering flood, storm, rain, snow, and fire danger levels (1 to 5).
 - **API Endpoint**: `https://app-prod-ws.meteoswiss-app.ch/v1/plzDetail?plz={plz}`
 - **Documentation**: [https://www.natural-hazards.ch/](https://www.natural-hazards.ch/)
@@ -202,6 +213,7 @@ Each integration follows a uniform, production-ready pattern:
 ---
 
 ### 11. ETH Swiss Seismological Service (SED)
+
 - **Purpose**: Real-time earthquake catalog covering Switzerland and surrounding alpine regions (magnitude, epicenter coordinates, depth, time).
 - **API Endpoint**: `http://arclink.ethz.ch/fdsnws/event/1/query?format=text`
 - **Documentation**: [https://www.seismo.ethz.ch/](https://www.seismo.ethz.ch/)
@@ -218,6 +230,7 @@ Each integration follows a uniform, production-ready pattern:
 ---
 
 ### 12. Swiss Population and Building Data (BFS)
+
 - **Purpose**: Demographic density (STATPOP) and building registry (GWR) exposure estimation to identify vulnerable structures, pre-1950 buildings, and exposed population counts in flood zones.
 - **API Endpoint**: `https://api3.geo.admin.ch/rest/services/all/MapServer/find?layer=ch.bfs.gebaeude_wohnungs_register`
 - **Documentation**: [https://www.bfs.admin.ch/](https://www.bfs.admin.ch/)
@@ -237,22 +250,23 @@ Each integration follows a uniform, production-ready pattern:
 
 The following live audit status was produced by executing `python test_integrations.py`:
 
-| # | Source | Auth required | Connectivity | Real data retrieved | Freshness | Status |
-| :-: | :--- | :---: | :---: | :---: | :--- | :---: |
-| 1 | **Open-Meteo Weather** | No | ✓ Connected | ✓ Yes | Live (15-min intervals) | **WORKING** |
-| 2 | **BAFU / FOEN Hydrology** | No | ✓ Connected | ✓ Yes | Live (10-min intervals) | **WORKING** |
-| 3 | **Windy Webcams V3** | Yes | ✓ Connected | ✓ Yes | Near real-time (15-min to 1-hr updates) | **WORKING** |
-| 4 | **swisstopo Geodata** | No | ✓ Connected | ✓ Yes | Static DEM / Official Cartography | **WORKING** |
-| 5 | **MeteoSwiss Weather Stations** | No | ✓ Connected | ✓ Yes | Observed at 10.10.2026 11:40 | **WORKING** |
-| 6 | **MeteoSwiss Precipitation Radar** | No | ✓ Connected | ✓ Yes | Latest update: 2026-10-04T05:04:53Z | **WORKING** |
-| 7 | **OpenStreetMap Overpass** | No | ✓ Connected | ✓ Yes | Live OSM Database | **WORKING** |
-| 8 | **ASTRA Road Traffic** | Yes | ✓ Connected | ✕ No | N/A (Key required) | **NEEDS API KEY** |
-| 9 | **Swiss Flood Hazard Maps** | No | ✓ Connected | ✓ Yes | Official BAFU Model (geo.admin.ch WMS) | **WORKING** |
-| 10 | **Official Swiss Hazard Warnings** | No | ✓ Connected | ✓ Yes | Live Federal Alerting Feed | **WORKING** |
-| 11 | **ETH Swiss Seismological Service** | No | ✓ Connected | ✓ Yes | Latest: 2026-10-09T03:03:52Z | **WORKING** |
-| 12 | **Swiss Population & Building Data** | No | ✓ Connected | ✓ Yes | Federal GWR & STATPOP Register | **WORKING** |
+|  #  | Source                               | Auth required | Connectivity | Real data retrieved | Freshness                               |      Status       |
+| :-: | :----------------------------------- | :-----------: | :----------: | :-----------------: | :-------------------------------------- | :---------------: |
+|  1  | **Open-Meteo Weather**               |      No       | ✓ Connected  |        ✓ Yes        | Live (15-min intervals)                 |    **WORKING**    |
+|  2  | **BAFU / FOEN Hydrology**            |      No       | ✓ Connected  |        ✓ Yes        | Live (10-min intervals)                 |    **WORKING**    |
+|  3  | **Windy Webcams V3**                 |      Yes      | ✓ Connected  |        ✓ Yes        | Near real-time (15-min to 1-hr updates) |    **WORKING**    |
+|  4  | **swisstopo Geodata**                |      No       | ✓ Connected  |        ✓ Yes        | Static DEM / Official Cartography       |    **WORKING**    |
+|  5  | **MeteoSwiss Weather Stations**      |      No       | ✓ Connected  |        ✓ Yes        | Observed at 10.10.2026 11:40            |    **WORKING**    |
+|  6  | **MeteoSwiss Precipitation Radar**   |      No       | ✓ Connected  |        ✓ Yes        | Latest update: 2026-10-04T05:04:53Z     |    **WORKING**    |
+|  7  | **OpenStreetMap Overpass**           |      No       | ✓ Connected  |        ✓ Yes        | Live OSM Database                       |    **WORKING**    |
+|  8  | **ASTRA Road Traffic**               |      Yes      | ✓ Connected  |        ✕ No         | N/A (Key required)                      | **NEEDS API KEY** |
+|  9  | **Swiss Flood Hazard Maps**          |      No       | ✓ Connected  |        ✓ Yes        | Official BAFU Model (geo.admin.ch WMS)  |    **WORKING**    |
+| 10  | **Official Swiss Hazard Warnings**   |      No       | ✓ Connected  |        ✓ Yes        | Live Federal Alerting Feed              |    **WORKING**    |
+| 11  | **ETH Swiss Seismological Service**  |      No       | ✓ Connected  |        ✓ Yes        | Latest: 2026-10-09T03:03:52Z            |    **WORKING**    |
+| 12  | **Swiss Population & Building Data** |      No       | ✓ Connected  |        ✓ Yes        | Federal GWR & STATPOP Register          |    **WORKING**    |
 
 ### Status Breakdown:
+
 - **WORKING**: **11**
 - **NEEDS API KEY**: **1** (ASTRA Road Traffic — opentransportdata.swiss token required)
 - **PARTIALLY WORKING**: **0**
@@ -274,6 +288,7 @@ python test_integrations.py
 ```
 
 The script will:
+
 1. Connect to each of the 12 endpoints sequentially.
 2. Verify HTTP responses, validate JSON/XML parsing, check coordinate projections, and assert schema integrity.
 3. Query the `HealthMonitor` across all 12 services and output the formatted GitHub Markdown health table.
@@ -283,7 +298,7 @@ The script will:
 
 ## 5. Exposing Data to the Gemini Reasoning Agent
 
-All data sources are exported as standalone, typed functions in [`crisis_data/agent_tools.py`](file:///Users/martinmaranon2/hackathon-tech-europe/crisis_data/agent_tools.py), ready for registration in Google Gemini Tool Declarations (`google.genai.types.Tool`):
+All data sources are exported as standalone, typed functions in [`crisis_data/agent_tools.py`](../crisis_data/agent_tools.py), ready for registration in Google Gemini Tool Declarations (`google.genai.types.Tool`):
 
 ```python
 from google import genai
